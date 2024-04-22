@@ -53,7 +53,7 @@ public class MainPage extends AppCompatActivity {
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                startActivity(new Intent(MainPage.this,AddLoginPage.class));
 
             }
         });
@@ -78,6 +78,9 @@ public class MainPage extends AppCompatActivity {
                 AlertDialog dialog = builder.create();
 
                 Button btnLogout = dialogView.findViewById(R.id.btnLogout);
+                TextView tvName = dialogView.findViewById(R.id.tvName);
+
+                tvName.setText(sharedPreferences.getString(KEY_FIRSTNAME,null));
 
                 btnLogout.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -101,6 +104,13 @@ public class MainPage extends AppCompatActivity {
 
     private void init(){
         tvNumberLogin = findViewById(R.id.tvNumberLogin);
+        LoginDB database= new LoginDB(this);
+
+
+        database.open();
+        tvNumberLogin.setText(database.numberOfItems()+"");
+        database.close();
+
         tvNumberBin = findViewById(R.id.tvNumberBin);
 
         btnAdd = findViewById(R.id.btnAdd);
