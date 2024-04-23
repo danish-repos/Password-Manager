@@ -1,6 +1,8 @@
 package com.example.password_manager;
 
 import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,16 +14,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 
-public class NotesPage extends AppCompatActivity {
+public class BinNotesPage extends AppCompatActivity {
 
-    RecyclerView rvLoginNotes;
-    NoteAdapter myAdapter;
+    RecyclerView rvBinNotes;
+    TextView tvDeleteAll;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_notes_page);
+        setContentView(R.layout.activity_bin_notes_page);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -29,20 +31,39 @@ public class NotesPage extends AppCompatActivity {
         });
 
         init();
+
+        tvDeleteAll.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                deleteAll();
+                finish();
+            }
+        });
+
     }
 
     private void init(){
+        tvDeleteAll = findViewById(R.id.tvDeleteAll);
 
-        rvLoginNotes = findViewById(R.id.rvLoginNotes);
-        rvLoginNotes.setHasFixedSize(true);
+        rvBinNotes = findViewById(R.id.rvBinNotes);
+        rvBinNotes.setHasFixedSize(true);
 
-        rvLoginNotes.setLayoutManager(new LinearLayoutManager(this));
+        rvBinNotes.setLayoutManager(new LinearLayoutManager(this));
 
         SQLDatabase database = new SQLDatabase(this);
         database.open();
-        ArrayList<NoteClass> notes = database.readAllNotes();
+        ArrayList<NoteClass> notes = database.readAllDeletedNotes();
         database.close();
 
-        rvLoginNotes.setAdapter(new NoteAdapter(this, notes));
+        rvBinNotes.setAdapter(new DeletedNoteAdapter(this, notes));
+
+    }
+
+
+    private void deleteAll(){
+        SQLDatabase database = new SQLDatabase(this);
+        database.open();
+        database.deleteNotes();
+        database.close();
     }
 }

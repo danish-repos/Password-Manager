@@ -84,7 +84,13 @@ public class LoginPage extends AppCompatActivity {
 
                 }
 
-                loginUser(email,password);
+                int result = loginUser(email,password);
+                if (result <= 0)
+                {
+                    Toast.makeText(LoginPage.this, "Invalid mail or password!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 startActivity(new Intent(LoginPage.this,MainPage.class));
                 finish();
 
@@ -221,12 +227,14 @@ public class LoginPage extends AppCompatActivity {
         database.insertLogin(firstName,lastName,email,password,gender);
         database.close();
     }
-    private void loginUser(String email,String password){
+    private int loginUser(String email,String password){
         SQLDatabase database = new SQLDatabase(this);
 
         database.open();
-        database.loginUser(email,password);
+        int result = database.loginUser(email,password);
         database.close();
+
+        return result;
     }
 
     private boolean isUserLoggedIn(){

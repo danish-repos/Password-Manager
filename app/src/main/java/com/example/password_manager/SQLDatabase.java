@@ -6,21 +6,26 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.icu.util.Output;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
+import java.io.Console;
 import java.util.ArrayList;
 
 public class SQLDatabase {
+
+    // name of our database
     private final String DATABASE_NAME = "NotesDB";
 
-    // TABLES
+
+    // tables used in this database
     private final String DATABASE_TABLE_LOGIN = "Login_Table";
     private final String DATABASE_TABLE_NOTES = "Notes_Table";
 
 
-    // TABLE NO 1
+    // login table to control the number of users
     private final String KEY_ID_LOGIN = "_id";
     private final String KEY_FIRSTNAME_LOGIN = "_firstname";
     private final String KEY_LASTNAME_LOGIN = "_lastname";
@@ -30,7 +35,7 @@ public class SQLDatabase {
     private final String KEY_ISLOGIN = "_islogin";
 
 
-    // TABLE NO 2
+    // notes table to control the notes of a users
     private final String KEY_ID_NOTE = "_id";
     private final String KEY_NAME_NOTE = "_name";
     private final String KEY_PASSWORD_NOTE = "_password";
@@ -38,6 +43,8 @@ public class SQLDatabase {
     private final String KEY_USER = "_user";
     private final String KEY_SHOW = "_toshow";
 
+
+    // the current version of our database
     private final int DATABASE_VERSION = 1;
 
     Context context;
@@ -50,6 +57,8 @@ public class SQLDatabase {
         context = c;
     }
 
+
+    // connection of our database
     public void open() {
         helper = new MyDatabaseHelper(context, DATABASE_NAME, null, DATABASE_VERSION);
         sqLiteDatabase = helper.getWritableDatabase();
@@ -58,6 +67,11 @@ public class SQLDatabase {
         sqLiteDatabase.close();
         helper.close();
     }
+
+
+
+    //------------------------------------------------------------------------------------------
+    // functions we needed to control the notes of a user in the database
 
     public void insertNote(String name, String password, String url) {
         ContentValues cv = new ContentValues();
@@ -78,31 +92,69 @@ public class SQLDatabase {
             Toast.makeText(context, "Item Added", Toast.LENGTH_SHORT).show();
         }
     }
-    public void insertLogin(String firstName, String lastName, String email, String password, String gender) {
+    public void deleteNote(int id) {
         ContentValues cv = new ContentValues();
-        cv.put(KEY_FIRSTNAME_LOGIN, firstName);
-        cv.put(KEY_LASTNAME_LOGIN, lastName);
-        cv.put(KEY_MAIL_LOGIN, email);
-        cv.put(KEY_PASSWORD_LOGIN, password);
-        cv.put(KEY_GENDER_LOGIN, gender);
-        cv.put(KEY_ISLOGIN, 0);
+        cv.put(KEY_SHOW, 0);
 
-        long temp = sqLiteDatabase.insert(DATABASE_TABLE_LOGIN, null, cv);
-        if(temp == -1)
+        sqLiteDatabase.update(DATABASE_TABLE_NOTES, cv, KEY_ID_NOTE+"=?", new String[]{id+""});
+    }
+    public void restoreNote(int id) {
+        ContentValues cv = new ContentValues();
+        cv.put(KEY_SHOW, 1);
+
+        sqLiteDatabase.update(DATABASE_TABLE_NOTES, cv, KEY_ID_NOTE+"=?", new String[]{id+""});
+    }
+    public void updateNote(int id, String newName, String newPassword, String newUrl) {
+        ContentValues cv = new ContentValues();
+        cv.put(KEY_NAME_NOTE, newName);
+        cv.put(KEY_PASSWORD_NOTE, newPassword);
+        cv.put(KEY_URL_NOTE, newUrl);
+
+
+        int records = sqLiteDatabase.update(DATABASE_TABLE_NOTES, cv, KEY_ID_NOTE+"=?", new String[]{id+""});
+        if(records>0)
         {
-            Toast.makeText(context, "Not Registered", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Contact updated", Toast.LENGTH_SHORT).show();
         }
         else
         {
-            Toast.makeText(context, "Registered", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Contact not updated", Toast.LENGTH_SHORT).show();
         }
-
     }
+
+
 
     public ArrayList<NoteClass> readAllNotes() {
         String loggedInUserID = getLoggedInID() + "";
 
-        Cursor c = sqLiteDatabase.rawQuery("SELECT * FROM " + DATABASE_TABLE_NOTES + " WHERE " + KEY_USER + " = ?", new String[]{loggedInUserID});
+        Cursor c = sqLiteDatabase.rawQuery("SELECT * FROM " + DATABASE_TABLE_NOTES + " WHERE " + KEY_USER + " = ? AND " + KEY_SHOW + "= ?", new String[]{loggedInUserID,1+""});
+        ArrayList<NoteClass> allLogins = new ArrayList<>();
+        int id_index = c.getColumnIndex(KEY_ID_NOTE);
+        int id_name = c.getColumnIndex(KEY_NAME_NOTE);
+        int id_password = c.getColumnIndex(KEY_PASSWORD_NOTE);
+        int id_url = c.getColumnIndex(KEY_URL_NOTE);
+
+        if(c.moveToFirst())
+        {
+            do{
+                NoteClass login = new NoteClass();
+                login.setId(c.getInt(id_index));
+                login.setName(c.getString(id_name));
+                login.setPassword(c.getString(id_password));
+                login.setUrl(c.getString(id_url));
+
+                allLogins.add(login);
+
+            }while(c.moveToNext());
+        }
+
+        c.close();
+        return allLogins;
+    }
+    public ArrayList<NoteClass> readAllDeletedNotes() {
+        String loggedInUserID = getLoggedInID() + "";
+
+        Cursor c = sqLiteDatabase.rawQuery("SELECT * FROM " + DATABASE_TABLE_NOTES + " WHERE " + KEY_USER + " = ? AND " + KEY_SHOW + "= ?", new String[]{loggedInUserID,0+""});
         ArrayList<NoteClass> allLogins = new ArrayList<>();
         int id_index = c.getColumnIndex(KEY_ID_NOTE);
         int id_name = c.getColumnIndex(KEY_NAME_NOTE);
@@ -127,17 +179,60 @@ public class SQLDatabase {
         return allLogins;
     }
 
-    //--------------------------------------------------------------------------------------------
 
-    public void loginUser(String email, String password) {
-        ContentValues cv = new ContentValues();
-        cv.put(KEY_ISLOGIN, 1);
 
-        sqLiteDatabase.update(DATABASE_TABLE_LOGIN, cv, KEY_MAIL_LOGIN+ "=? and "+KEY_PASSWORD_LOGIN+ "=?", new String[]{email,password});
+    public int numberOfPresentNotes() {
+        ArrayList<NoteClass> temp = readAllNotes();
+        return temp.size();
+    }
+    public int numberOfDeletedNotes() {
+        String loggedInUserID = getLoggedInID() + "";
+        Cursor cursor = sqLiteDatabase.rawQuery("SELECT COUNT(*) FROM " + DATABASE_TABLE_NOTES + " WHERE " + KEY_USER + " = ? and " + KEY_SHOW + " = ?", new String[]{loggedInUserID, "0"});
+        int count = 0;
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+        }
+        cursor.close();
+        return count;
+    }
+
+    public void deleteNotes() {
+        String loggedInUserID = getLoggedInID() + "";
+        sqLiteDatabase.delete(DATABASE_TABLE_NOTES, KEY_USER + " = ? AND " + KEY_SHOW + " = ?", new String[]{loggedInUserID, "0"});
 
 
     }
 
+    //----------------------------------------------------------------------------------------------------
+    // functions we needed to control the users in the database
+
+    public void insertLogin(String firstName, String lastName, String email, String password, String gender) {
+        ContentValues cv = new ContentValues();
+        cv.put(KEY_FIRSTNAME_LOGIN, firstName);
+        cv.put(KEY_LASTNAME_LOGIN, lastName);
+        cv.put(KEY_MAIL_LOGIN, email);
+        cv.put(KEY_PASSWORD_LOGIN, password);
+        cv.put(KEY_GENDER_LOGIN, gender);
+        cv.put(KEY_ISLOGIN, 0);
+
+        long temp = sqLiteDatabase.insert(DATABASE_TABLE_LOGIN, null, cv);
+        if(temp == -1)
+        {
+            Toast.makeText(context, "Not Registered", Toast.LENGTH_SHORT).show();
+        }
+        else
+        {
+            Toast.makeText(context, "Registered", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+
+    public int loginUser(String email, String password) {
+        ContentValues cv = new ContentValues();
+        cv.put(KEY_ISLOGIN, 1);
+        return sqLiteDatabase.update(DATABASE_TABLE_LOGIN, cv, KEY_MAIL_LOGIN+ "=? and "+KEY_PASSWORD_LOGIN+ "=?", new String[]{email,password});
+    }
     public void logoutUser(){
         ContentValues cv = new ContentValues();
         cv.put(KEY_ISLOGIN, 0);
@@ -164,7 +259,6 @@ public class SQLDatabase {
         cursor.close();
         return firstName;
     }
-
     public int getLoggedInID(){
         int id = 0;
         Cursor cursor = sqLiteDatabase.rawQuery("SELECT " + KEY_ID_LOGIN + " FROM " + DATABASE_TABLE_LOGIN + " WHERE " + KEY_ISLOGIN + " = 1", null);
@@ -176,6 +270,11 @@ public class SQLDatabase {
         return id;
     }
 
+
+
+
+    //----------------------------------------------------------------------------------------------------
+    // helper class of our database
 
     private class MyDatabaseHelper extends SQLiteOpenHelper
     {
@@ -214,9 +313,14 @@ public class SQLDatabase {
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+            // if ever want to backup data, write code here
+
+
             db.execSQL("DROP TABLE "+DATABASE_TABLE_NOTES+" IF EXISTS");
             db.execSQL("DROP TABLE "+DATABASE_TABLE_LOGIN+" IF EXISTS");
             onCreate(db);
         }
     }
+
+    //----------------------------------------------------------------------------------------------------
 }

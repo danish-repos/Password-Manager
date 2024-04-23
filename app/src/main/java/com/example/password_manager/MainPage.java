@@ -23,7 +23,7 @@ public class MainPage extends AppCompatActivity {
     TextView tvNumberLogin, tvNumberBin;
     FloatingActionButton btnAdd;
 
-    LinearLayout layoutLogin, layoutProfile;
+    LinearLayout layoutNotes, layoutProfile, layoutBin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +37,8 @@ public class MainPage extends AppCompatActivity {
         });
 
         init();
+        updateNumberOfNotes();
+
 
 
         btnAdd.setOnClickListener(new View.OnClickListener() {
@@ -47,10 +49,9 @@ public class MainPage extends AppCompatActivity {
             }
         });
 
-        layoutLogin.setOnClickListener(new View.OnClickListener() {
+        layoutNotes.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 startActivity(new Intent(MainPage.this, NotesPage.class));
 
             }
@@ -59,6 +60,8 @@ public class MainPage extends AppCompatActivity {
         layoutProfile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // it will show a dialog where the user name will be displayed so that we know which user is currently
+                // logged in, also has a option to logout by a button.
 
                 View dialogView = LayoutInflater.from(MainPage.this).inflate(R.layout.dialog_logout, null);
 
@@ -70,8 +73,6 @@ public class MainPage extends AppCompatActivity {
                 TextView tvName = dialogView.findViewById(R.id.tvName);
 
                 tvName.setText(getLoggedInUserName());
-
-
 
                 btnLogout.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -88,18 +89,25 @@ public class MainPage extends AppCompatActivity {
                 dialog.show();
             }
         });
+
+        layoutBin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainPage.this, BinNotesPage.class));
+            }
+        });
     }
 
 
     private void init(){
         tvNumberLogin = findViewById(R.id.tvNumberLogin);
-
         tvNumberBin = findViewById(R.id.tvNumberBin);
 
         btnAdd = findViewById(R.id.btnAdd);
 
-        layoutLogin = findViewById(R.id.layoutLogin);
+        layoutNotes = findViewById(R.id.layoutNotes);
         layoutProfile= findViewById(R.id.layoutProfile);
+        layoutBin = findViewById(R.id.layoutBin);
 
     }
 
@@ -120,5 +128,20 @@ public class MainPage extends AppCompatActivity {
 
         return temp;
 
+    }
+
+    private void updateNumberOfNotes(){
+        SQLDatabase database = new SQLDatabase(this);
+
+        database.open();
+        tvNumberLogin.setText(database.numberOfPresentNotes());
+        database.close();
+    }
+    private void updateNumberOfDeletedNotes(){
+        SQLDatabase database = new SQLDatabase(this);
+
+        database.open();
+        tvNumberBin.setText(database.numberOfDeletedNotes());
+        database.close();
     }
 }

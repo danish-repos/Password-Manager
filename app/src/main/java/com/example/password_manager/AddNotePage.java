@@ -34,7 +34,9 @@ public class AddNotePage extends AppCompatActivity {
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                add();
+                if (add() == -1 ){
+                    return;
+                }
                 startActivity(new Intent(AddNotePage.this, MainPage.class));
                 finish();
 
@@ -50,7 +52,7 @@ public class AddNotePage extends AppCompatActivity {
         btnAdd = findViewById(R.id.btnAdd);
     }
 
-    private void add(){
+    private int add(){
         String name = etName.getText().toString().trim();
         String password = etPassowrd.getText().toString().trim();
         String url = etURL.getText().toString().trim();
@@ -58,7 +60,7 @@ public class AddNotePage extends AppCompatActivity {
         if(name.isEmpty() || password.isEmpty() || url.isEmpty())
         {
             Toast.makeText(AddNotePage.this, "Can't leave anything empty!", Toast.LENGTH_SHORT).show();
-            return;
+            return -1;
         }
 
         SQLDatabase database = new SQLDatabase(this);
@@ -68,6 +70,7 @@ public class AddNotePage extends AppCompatActivity {
 
         database.close();
 
+        return 0;
     }
 
 
