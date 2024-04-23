@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 
-public class LoginNotesPage extends AppCompatActivity {
+public class NotesPage extends AppCompatActivity {
 
     RecyclerView rvLoginNotes;
     NoteAdapter myAdapter;
@@ -21,7 +21,7 @@ public class LoginNotesPage extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_login_notes_page);
+        setContentView(R.layout.activity_notes_page);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -38,9 +38,9 @@ public class LoginNotesPage extends AppCompatActivity {
 
         rvLoginNotes.setLayoutManager(new LinearLayoutManager(this));
 
-        LoginDB database = new LoginDB(this);
+        SQLDatabase database = new SQLDatabase(this);
         database.open();
-        ArrayList<LoginNoteClass> logins = database.readAllContacts();
+        ArrayList<NoteClass> logins = database.readAllNotes();
         database.close();
 
         rvLoginNotes.setAdapter(new NoteAdapter(this, logins));

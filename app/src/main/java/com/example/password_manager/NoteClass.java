@@ -1,14 +1,14 @@
 package com.example.password_manager;
 
-public class LoginNoteClass {
+public class NoteClass {
 
     int id;
     String name, password, url;
 
-    public LoginNoteClass() {
+    public NoteClass() {
     }
 
-    public LoginNoteClass(int id, String name, String password, String url) {
+    public NoteClass(int id, String name, String password, String url) {
         this.id = id;
         this.name = name;
         this.password = password;

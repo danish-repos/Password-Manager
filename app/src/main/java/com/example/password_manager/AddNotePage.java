@@ -13,7 +13,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-public class AddLoginPage extends AppCompatActivity {
+public class AddNotePage extends AppCompatActivity {
 
     EditText etName, etPassowrd, etURL;
     Button btnAdd;
@@ -22,7 +22,7 @@ public class AddLoginPage extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_add_login_page);
+        setContentView(R.layout.activity_add_note_page);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -35,7 +35,7 @@ public class AddLoginPage extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 add();
-                startActivity(new Intent(AddLoginPage.this, MainPage.class));
+                startActivity(new Intent(AddNotePage.this, MainPage.class));
                 finish();
 
             }
@@ -57,14 +57,14 @@ public class AddLoginPage extends AppCompatActivity {
 
         if(name.isEmpty() || password.isEmpty() || url.isEmpty())
         {
-            Toast.makeText(AddLoginPage.this, "Can't leave anything empty!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(AddNotePage.this, "Can't leave anything empty!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        LoginDB database = new LoginDB(this);
+        SQLDatabase database = new SQLDatabase(this);
         database.open();
 
-        database.insert(name, password, url);
+        database.insertNote(name, password, url);
 
         database.close();
 

@@ -1,7 +1,6 @@
 package com.example.password_manager;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,16 +25,6 @@ public class MainPage extends AppCompatActivity {
 
     LinearLayout layoutLogin, layoutProfile;
 
-    SharedPreferences sharedPreferences;
-
-    private static final String SHARED_PF_NAME = "user_pf";
-    private static final String KEY_FIRSTNAME = "firstName";
-    private static final String KEY_LASTNAME = "lastName";
-    private static final String KEY_EMAIL = "email";
-    private static final String KEY_PASSWORD = "password";
-    private static final String KEY_GENDER = "gender";
-    private static final String KEY_IS_LOGGED_IN = "isLoggedIn";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,7 +42,7 @@ public class MainPage extends AppCompatActivity {
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainPage.this,AddLoginPage.class));
+                startActivity(new Intent(MainPage.this, AddNotePage.class));
 
             }
         });
@@ -62,7 +51,7 @@ public class MainPage extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                startActivity(new Intent(MainPage.this, LoginNotesPage.class));
+                startActivity(new Intent(MainPage.this, NotesPage.class));
 
             }
         });
@@ -80,15 +69,15 @@ public class MainPage extends AppCompatActivity {
                 Button btnLogout = dialogView.findViewById(R.id.btnLogout);
                 TextView tvName = dialogView.findViewById(R.id.tvName);
 
-                tvName.setText(sharedPreferences.getString(KEY_FIRSTNAME,null));
+                tvName.setText(getLoggedInUserName());
+
+
 
                 btnLogout.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
 
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putBoolean(KEY_IS_LOGGED_IN,false);
-                        editor.apply();
+                        logoutUser();
 
                         startActivity(new Intent(MainPage.this,LoginPage.class));
                         finish();
@@ -104,12 +93,6 @@ public class MainPage extends AppCompatActivity {
 
     private void init(){
         tvNumberLogin = findViewById(R.id.tvNumberLogin);
-        LoginDB database= new LoginDB(this);
-
-
-        database.open();
-        tvNumberLogin.setText(database.numberOfItems()+"");
-        database.close();
 
         tvNumberBin = findViewById(R.id.tvNumberBin);
 
@@ -118,6 +101,24 @@ public class MainPage extends AppCompatActivity {
         layoutLogin = findViewById(R.id.layoutLogin);
         layoutProfile= findViewById(R.id.layoutProfile);
 
-        sharedPreferences = getSharedPreferences(SHARED_PF_NAME,MODE_PRIVATE);
+    }
+
+    private void logoutUser(){
+        SQLDatabase database = new SQLDatabase(this);
+
+        database.open();
+        database.logoutUser();
+        database.close();
+    }
+
+    private String getLoggedInUserName() {
+        SQLDatabase database = new SQLDatabase(this);
+
+        database.open();
+        String temp = database.getLoggedInUserName();
+        database.close();
+
+        return temp;
+
     }
 }
