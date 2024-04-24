@@ -25,6 +25,15 @@ public class MainPage extends AppCompatActivity {
 
     LinearLayout layoutNotes, layoutProfile, layoutBin;
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        updateNumberOfNotes();
+        updateNumberOfDeletedNotes();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,7 +46,10 @@ public class MainPage extends AppCompatActivity {
         });
 
         init();
+
         updateNumberOfNotes();
+        updateNumberOfDeletedNotes();
+
 
 
 
@@ -134,14 +146,14 @@ public class MainPage extends AppCompatActivity {
         SQLDatabase database = new SQLDatabase(this);
 
         database.open();
-        tvNumberLogin.setText(database.numberOfPresentNotes());
+        tvNumberLogin.setText(database.numberOfPresentNotes() + "");
         database.close();
     }
     private void updateNumberOfDeletedNotes(){
         SQLDatabase database = new SQLDatabase(this);
 
         database.open();
-        tvNumberBin.setText(database.numberOfDeletedNotes());
+        tvNumberBin.setText(database.numberOfDeletedNotes() + "");
         database.close();
     }
 }

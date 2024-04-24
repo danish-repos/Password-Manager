@@ -182,8 +182,14 @@ public class SQLDatabase {
 
 
     public int numberOfPresentNotes() {
-        ArrayList<NoteClass> temp = readAllNotes();
-        return temp.size();
+        String loggedInUserID = getLoggedInID() + "";
+        Cursor cursor = sqLiteDatabase.rawQuery("SELECT COUNT(*) FROM " + DATABASE_TABLE_NOTES + " WHERE " + KEY_USER + " = ? and " + KEY_SHOW + " = ?", new String[]{loggedInUserID, "1"});
+        int count = 0;
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+        }
+        cursor.close();
+        return count;
     }
     public int numberOfDeletedNotes() {
         String loggedInUserID = getLoggedInID() + "";
